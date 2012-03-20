@@ -1,14 +1,9 @@
-group { 'puppet':
-    ensure => present,
-}
-
 exec { 'apt-get update': 
     command => '/usr/bin/apt-get update',
 }
 
-package { 'apache2': 
+group { 'puppet':
     ensure => present,
-    require => Exec['apt-get update'],
 }
 
 package { 'php5':
@@ -16,28 +11,16 @@ package { 'php5':
     require => Exec['apt-get update'],
 }
 
+include apache
 
-file { "/etc/apache2/sites-available/vhost.conf":
-	ensure => file,
-	owner => root,
-	group => root,
-	mode => 0644,
-	source => 'puppet:///modules/apache2/vhost.conf',
-	notify => Service["apache2"]
-}
-file { "/etc/apache2/sites-enabled/vhost.conf":
-	ensure => "/etc/apache2/sites-available/vhost.conf",
-	require => File["/etc/apache2/sites-available/vhost.conf"],
-	notify => Service["apache2"]
-}
-file { "/etc/apache2/sites-enabled/000-default":
-	ensure => absent,
-	require => File["/etc/apache2/sites-enabled/vhost.conf"],
-	notify => Service["apache2"]
-}
-
-service { 'apache2':
-    ensure => running,
-    require => Package['apache2'],
-
-}
+$password = "superSecurePa55word"
+  package { "mysql-server": ensure => installed }
+  package { "mysql-client": ensure => installed }
+  
+  exec { "Set MySQL server root password":
+    subscribe => [ Package["mysql-server"], Package["mysql-client"] ],
+    refreshonly => true,
+    unless => "mysqladmin -uroot -p$password status",
+    path => "/bin:/usr/bin",
+    command => "mysqladmin -uroot password $password",
+  }
