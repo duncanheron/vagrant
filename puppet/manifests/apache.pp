@@ -11,17 +11,22 @@ class apache
 		group => root,
 		mode => 0644,
 		source => 'puppet:///modules/apache2/vhost.conf',
-		notify => Service["apache2"]
+		require => Package['apache2'],
+		notify => Service["apache2"],
 	}
+
 	file { "/etc/apache2/sites-enabled/vhost.conf":
-		ensure => "/etc/apache2/sites-available/vhost.conf",
+		path => "/etc/apache2/sites-enabled/vhost.conf",
+	    target => "/etc/apache2/sites-available/vhost.conf",
+	    ensure => link,
 		require => File["/etc/apache2/sites-available/vhost.conf"],
-		notify => Service["apache2"]
+		notify => Service["apache2"],
 	}
+	
 	file { "/etc/apache2/sites-enabled/000-default":
 		ensure => absent,
 		require => File["/etc/apache2/sites-enabled/vhost.conf"],
-		notify => Service["apache2"]
+		notify => Service["apache2"],
 	}
 
 	service { 'apache2':
